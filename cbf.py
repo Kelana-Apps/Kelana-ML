@@ -11,7 +11,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import KFold
 import matplotlib.pyplot as plt
 
-# Download necessary NLTK resources
+# Download NLTK resources
 nltk.download('punkt_tab')
 nltk.download('stopwords')
 
@@ -20,7 +20,7 @@ places_df = pd.read_csv('dataset/tourismkelana_fixed.csv')
 
 places_df.head()
 
-# **Step 1: Price Categorization**
+# Step 1: Price Categorization
 def categorize_price(df):
     conditions = [
         (df['Price'] < 50000),
@@ -33,7 +33,7 @@ def categorize_price(df):
 
 places_df = categorize_price(places_df)
 
-# **Step 2: Preprocessing Text**
+# Step 2: Preprocessing Text
 def preprocess_text(text):
     tokens = nltk.word_tokenize(text.lower())
     tokens = [word for word in tokens if word.isalpha()]
@@ -45,11 +45,11 @@ def preprocess_text(text):
 places_df['content'] = places_df['Category'] + ' ' + places_df['Description']
 places_df['processed_content'] = places_df['content'].apply(preprocess_text)
 
-# **Step 3: TF-IDF Vectorization**
+# **Step 3: TF-IDF Vectorization
 tfidf_vectorizer = TfidfVectorizer(max_features=500)
 tfidf_matrix = tfidf_vectorizer.fit_transform(places_df['processed_content']).toarray()
 
-# **Step 4: Encoding Kategori dan Harga**
+# **Step 4: Encoding Categories and Prices
 label_encoder_category = LabelEncoder()
 places_df['Category_encoded'] = label_encoder_category.fit_transform(places_df['Category'])
 
@@ -154,7 +154,7 @@ model = tf.keras.models.load_model('cbf_model.h5')
 
 from sklearn.utils import shuffle
 
-# **Step 6: Rekomendasi Berdasarkan Kota dan Harga**
+# Step 6: Recommendations Based on City and Price
 def recommend(city_name, price_category, waktu, top_n=3):
     """
     Memberikan rekomendasi tempat wisata berdasarkan kota dan kategori harga.
@@ -167,7 +167,7 @@ def recommend(city_name, price_category, waktu, top_n=3):
     Returns:
         pd.DataFrame - DataFrame yang berisi nama tempat, kategori, deskripsi, rating, dan harga.
     """
-    # Filter berdasarkan kota dan harga
+    # Filter Based on City and Price
     tm = 0
     if waktu == "morning":
       tm = 10
@@ -205,6 +205,6 @@ recommendations = recommend("Surabaya", "Murah", "Evening", 50)
 print(len(recommendations))
 print(recommendations)
 
-# Menyimpan model CBF yang sudah dilatih ke dalam file H5
+# # Save the model
 # model.save('cbf_model.h5')
 
