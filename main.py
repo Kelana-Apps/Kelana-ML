@@ -1,27 +1,27 @@
 from datetime import datetime
-from tsp import solve_tsp  # Import fungsi TSP
-from cbf import recommend  # Import fungsi CBF
+from tsp import solve_tsp
+from cbf import recommend
 import pandas as pd
 
-# Fungsi untuk menghitung durasi liburan dalam hari
+# Function to calculate vacation duration
 def calculate_duration(start_date, end_date):
     start = datetime.strptime(start_date, "%d-%m-%Y")
     end = datetime.strptime(end_date, "%d-%m-%Y")
-    return (end - start).days + 1  # Tambahkan 1 untuk menghitung hari terakhir
+    return (end - start).days + 1  # Add 1 to count the last day
 
-# Fungsi untuk mendapatkan rekomendasi per slot waktu
+# Function to get recommendations per time slot
 def get_recommendations_per_time_slot(city, price_category):
     time_slots = ['morning', 'afternoon', 'evening']
     recommendations_per_slot = {slot: pd.DataFrame() for slot in time_slots}
 
     for slot in time_slots:
-        temp_recommendations = recommend(city, price_category, slot, top_n=3)  # Ambil rekomendasi terbaik untuk tiap waktu
+        temp_recommendations = recommend(city, price_category, slot, top_n=3)  # Get the best recommendation for each time slot
         if isinstance(temp_recommendations, pd.DataFrame):
             recommendations_per_slot[slot] = temp_recommendations
 
     return recommendations_per_slot
 
-# Fungsi untuk memilih satu tempat dari setiap slot waktu untuk setiap hari
+# Function to select one place from each time slot for each day
 def select_places_for_days(recommendations_per_slot, num_days):
     selected_places = []
 
@@ -29,35 +29,35 @@ def select_places_for_days(recommendations_per_slot, num_days):
         day_places = {}
         for slot in recommendations_per_slot:
             if not recommendations_per_slot[slot].empty:
-                selected_place = recommendations_per_slot[slot].iloc[0]  # Ambil tempat pertama dari setiap slot
+                selected_place = recommendations_per_slot[slot].iloc[0]  # Get the first place from each time slot
                 day_places[slot] = selected_place
-                recommendations_per_slot[slot] = recommendations_per_slot[slot].iloc[1:]  # Hapus tempat yang sudah dipilih
+                recommendations_per_slot[slot] = recommendations_per_slot[slot].iloc[1:]  # Remove the selected place
         selected_places.append(day_places)
 
     return selected_places
 
-# Fungsi utama untuk menjalankan aplikasi
+# The main function to run the application
 def main():
     print("Selamat datang di Aplikasi Optimasi Itinerary!")
     print("Masukkan informasi berikut untuk memulai:\n")
     
-    # Input dari pengguna
+    # Input user
     city = input("Masukkan nama kota tujuan: ")
     start_date = input("Masukkan tanggal mulai liburan (dd-mm-yyyy): ")
     end_date = input("Masukkan tanggal selesai liburan (dd-mm-yyyy): ")
     price_category = input("Masukkan kategori harga (Murah/Sedang/Mahal): ")
 
-    # Menghitung durasi liburan
+    # Calculate vacation duration
     num_days = calculate_duration(start_date, end_date)
     print(f"Durasi liburan Anda adalah {num_days} hari.\n")
 
-    # Mendapatkan rekomendasi per slot waktu
+    # Get recommendations per time slot
     recommendations_per_slot = get_recommendations_per_time_slot(city, price_category)
 
-    # Memilih tempat untuk setiap hari
+    # Select one place from each time slot for each day
     selected_places = select_places_for_days(recommendations_per_slot, num_days)
 
-    # Mengoptimalkan rute perjalanan
+    # Optimize TSP for each day
     total_distance = 0
     optimized_routes = []
 
@@ -69,7 +69,7 @@ def main():
             for slot, place in day_places.items()
         }
 
-        # Menyelesaikan masalah TSP untuk rute perjalanan hari ini
+        # Solve the TSP problem for today's travel route
         route_info = solve_tsp(places_with_coords_day)
 
         if route_info:
@@ -86,13 +86,13 @@ def main():
 
     print(f"\nTotal jarak perjalanan untuk {num_days} hari: {total_distance:.2f} km")
 
-    # Menyusun rencana perjalanan berdasarkan rute yang dioptimalkan
+    # Prepare the travel plan based on the optimized route
     itinerary = pd.DataFrame(columns=['Day', 'Time_Slot', 'Place_Name', 'Category', 'Description', 'Rating', 'Price', 'Coordinate', 'Opening_Time', 'Closing_Time'])
     
-    # Tentukan rencana perjalanan berdasarkan rute yang dioptimalkan
+    # Determine the travel plan based on the optimized route
     for day_idx, day_places in enumerate(selected_places):
         for slot, place in day_places.items():
-            # Menambahkan data ke itinerary
+            # Add the selected place to the itinerary
             itinerary = pd.concat([itinerary, pd.DataFrame([{
                 'Day': day_idx + 1,
                 'Time_Slot': slot,
@@ -106,7 +106,7 @@ def main():
                 'Closing_Time': place['Closing_Time']
             }])], ignore_index=True)
 
-    # Menampilkan rekomendasi tempat dan slot waktunya
+    # Print the travel plan
     print("\nRekomendasi tempat wisata dan waktu kunjungan:")
     print(itinerary)
 
